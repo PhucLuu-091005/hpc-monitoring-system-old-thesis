@@ -11,13 +11,28 @@ sudo apt update
 echo "Installing dependencies..."
 sudo apt-get install -y adduser libfontconfig1 musl
 
+# Detect system architecture
+echo "Detecting system architecture..."
+ARCH=$(uname -m)
+echo "Detected architecture: $ARCH"
+
+# Set Grafana package based on architecture
+if [ "$ARCH" = "x86_64" ]; then
+    GRAFANA_PACKAGE="grafana_11.2.0_amd64.deb"
+elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+    GRAFANA_PACKAGE="grafana_11.2.0_arm64.deb"
+else
+    echo "Unsupported architecture: $ARCH"
+    exit 1
+fi
+
 # Download Grafana .deb package
-echo "Downloading Grafana..."
-wget https://dl.grafana.com/oss/release/grafana_11.2.0_amd64.deb
+echo "Downloading Grafana for $ARCH..."
+wget https://dl.grafana.com/oss/release/$GRAFANA_PACKAGE
 
 # Install Grafana
 echo "Installing Grafana..."
-sudo dpkg -i grafana_11.2.0_amd64.deb
+sudo dpkg -i $GRAFANA_PACKAGE
 
 # Start Grafana service
 echo "Starting Grafana service..."
