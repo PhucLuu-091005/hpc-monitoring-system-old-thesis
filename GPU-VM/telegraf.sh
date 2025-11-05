@@ -43,6 +43,11 @@ set -a
 source <(sudo cat /root/.env)
 set +a
 
+# Detect nvidia-smi path
+echo "Detecting nvidia-smi path..."
+NVIDIA_SMI_PATH=$(which nvidia-smi)
+echo "Found nvidia-smi at: $NVIDIA_SMI_PATH"
+
 # Create custom telegraf.conf
 echo "Creating custom telegraf.conf..."
 sudo tee telegraf.conf > /dev/null <<EOF
@@ -79,7 +84,7 @@ sudo tee telegraf.conf > /dev/null <<EOF
 
 # Read NVIDIA GPU metrics
 [[inputs.nvidia_smi]]
-  bin_path = "/usr/lib/wsl/lib/nvidia-smi"
+  bin_path = "$NVIDIA_SMI_PATH"
   timeout = "5s"
 EOF
 
