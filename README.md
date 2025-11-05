@@ -1,7 +1,5 @@
 # HPC System Monitoring Tool Deployment Guide
-# HPC System Monitoring Tool Deployment Guide
 
-## Head Node Configuration
 ## Head Node Configuration
 
 ### Prerequisites
@@ -15,7 +13,6 @@ sudo apt update && sudo apt install -y curl wget git
 2. (Optional) Verify required packages are installed
 
 ```
-sudo apt list --installed | grep -E "(python3|pip|curl|wget|git)" | head -10
 sudo apt list --installed | grep -E "(python3|pip|curl|wget|git)" | head -10
 ```
 
@@ -71,10 +68,6 @@ INFLUX_TOKEN=<replace with your token>
 INFLUX_ORG=<replace with your organization>
 INFLUX_BUCKET_VM=<replace with your bucket>
 INFLUX_HOSTNAME=<replace with your IP address>
-INFLUX_TOKEN=<replace with your token>
-INFLUX_ORG=<replace with your organization>
-INFLUX_BUCKET_VM=<replace with your bucket>
-INFLUX_HOSTNAME=<replace with your IP address>
 EOF
 ```
 
@@ -89,7 +82,6 @@ sudo systemctl status influxdb --no-pager -l
 1. Navigate to the Grafana-VM directory
 
 ```
-cd ../Grafana-VM
 cd ../Grafana-VM
 ```
 
