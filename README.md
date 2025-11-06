@@ -1,153 +1,130 @@
-# How To Deploy Monitoring Tool For HPC Systems
+# HPC System Monitoring Tool Deployment Guide
 
-## For Head Node
+## Head Node Configuration
 
-### Preparation
-1. Make sure to update the system and install some simple tools
+### Prerequisites
+
+1. Update the system and install essential utilities
+
 ```
 sudo apt update && sudo apt install -y curl wget git
 ```
 
-2. Check for required packages
+2. (Optional) Verify required packages are installed
+
 ```
-sudo apt list -installed | grep -E "(python3|pip|curl|wget|git)" | head -10
+sudo apt list --installed | grep -E "(python3|pip|curl|wget|git)" | head -10
 ```
 
-### Setup InfluxDB as the database layer
-1. Move to the InfluxDb-VM directory
-```
-cd InfluxDb-VM
-```
+3. Install the dos2unix utility for file format conversion
 
-2. Install dos2unix package for converting files
 ```
 sudo apt install -y dos2unix
 ```
 
-3. Convert influxdb.sh file
+4. Get to know the TIG stack (Telegraf, InfluxDB, Grafana) so you can understand how the system works better.
+
+### InfluxDB Database Layer Configuration
+
+1. Navigate to the InfluxDB-VM directory
+
+```
+cd ./InfluxDb-VM
+```
+
+2. Convert the installation script to Unix format
+
 ```
 dos2unix influxdb.sh
 ```
 
-4. Grant executive right and install InfluxDB
+3. Grant execution permissions and run the InfluxDB installation
+
 ```
 chmod +x influxdb.sh && ./influxdb.sh
 ```
 
-5. After successfully start InfluxDB, go to http://localhost:8086 and create and account, then store the returned token in a file. When creating the account, the following information is required:
-* Username
-* Password
-* Organization
-* Bucket
-Please remember these information for latter use
+4. Once InfluxDB has started successfully, navigate to http://localhost:8086 to create an account. Securely store the generated authentication token. You need the following information to create an account:
 
-6. Get the IP of the system and remember for latter use
+- Username
+- Password
+- Organization
+- Bucket
+
+  **Important:** Keep these login details for later configuration steps.
+
+5. Get the system IP address for later use
+
 ```
 hostname -I | awk '{print $1}'
 ```
 
-7. Create a configuration file
+6. Create the environment configuration file
+
 ```
 sudo tee /root/.env > /dev/null <<EOF
 INFLUX_URL=http://localhost:8086
-INFLUX_TOKEN=<replace by your token>
-INFLUX_ORG=<replace by your organization>
-INFLUX_BUCKET_VM=<replace by your bucket>
-INFLUX_HOSTNAME=<replace by your IP address>
+INFLUX_TOKEN=<replace with your token>
+INFLUX_ORG=<replace with your organization>
+INFLUX_BUCKET_VM=<replace with your bucket>
+INFLUX_HOSTNAME=<replace with your IP address>
 EOF
 ```
 
-8. Check for InfluxDB service's status
+7. (Optional) Verify the InfluxDB service status
+
 ```
-sudo systemctl status influxdb -no-pager
+sudo systemctl status influxdb --no-pager -l
 ```
 
-### Setup Grafana
-1. Move to the Grafana-VM directory
+### Grafana Visualization Layer Configuration
+
+1. Navigate to the Grafana-VM directory
+
 ```
-cd ./Grafana-VM
+cd ../Grafana-VM
 ```
 
-2. Convert grafana.sh file
+2. Convert the installation script to Unix format
+
 ```
 dos2unix grafana.sh
 ```
 
-3. Check for the system's architecture
-```
-uname -m
-```
-Note for the ARM architecture:
-* Download Grafana:
-```
-wget https://dl.grafana.com/oss/release/grafana_11.2.0_arm64.deb
-```
-* Install Grafana:
-```
-sudo dpkg -i grafana_11.2.0_arm64.deb
-```
+3. Grant execution permissions and run the Grafana installation
 
-4. Grant executive right and install Grafana
 ```
 chmod +x grafana.sh && ./grafana.sh
 ```
 
-5. Check for Grafana service's status
-```
-sudo systemctl status grafana-server -no-pager
-```
+4. (Optional) Verify the Grafana service status
 
-### Setup Telegraf (For both Head node and Sub-node)
-1. Download Telegraf (Remember to check for the system's architecture to download the right version)
 ```
-wget https://dl.influxdata.com/telegraf/releases/telegraf_1.27.1-1_amd64.deb
+sudo systemctl status grafana-server --no-pager -l
 ```
 
-2. Install Telegraf
-```
-sudo dpkg -i telegraf_1.27.1-1_amd64.deb
-```
+### Telegraf Agent Configuration (Head Node and Compute Nodes)
 
-3. Create configuration file
+1. Navigate to the GPU-VM directory
+
 ```
-sudo nano /etc/telegraf/telegraf.conf
+cd ../GPU-VM
 ```
 
-4. Insert the following into the configuration file
+2. Convert the installation script to Unix format
+
 ```
-# Agent Configuration
-[agent]
-  interval = "5s"
-  flush_interval = "5s"
-  hostname = "<node-name>"
-
-# Output Plugin for InfluxDB
-[[outputs.influxdb_v2]]
-  urls = ["<IP address of the head node>"]
-  token = "<InfluxDB's token>"
-  organization = "<InfluxDB's organization>"
-  bucket = "<InfluxDB's bucket>"
-
-# Read metrics about cpu usage
-[[inputs.cpu]]
-  percpu = true
-  totalcpu = true
-  collect_cpu_time = false
-  report_active = false
-  core_tags = true
-
-# Read metrics about disk IO by device
-[[inputs.diskio]]
-
-# Read metrics about memory usage
-[[inputs.mem]]
-
-[[inputs.processes]]
-
-[[inputs.system]]
+dos2unix telegraf.sh
 ```
 
-5. Start Telegraf
+3. Grant execution permissions and run the Telegraf installation
+
 ```
-sudo systemctl start telegraf
+chmod +x telegraf.sh && ./telegraf.sh
+```
+
+4. (Optional) Verify the Telegraf service status
+
+```
+sudo systemctl status telegraf --no-pager -l
 ```

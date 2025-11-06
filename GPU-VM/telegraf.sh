@@ -10,6 +10,17 @@ export DEBIAN_FRONTEND=noninteractive
 echo "Updating package lists..."
 sudo apt-get update
 
+# Check if nvidia-smi is available
+echo "Verifying NVIDIA drivers..."
+if ! command -v nvidia-smi &> /dev/null; then
+    echo "WARNING: nvidia-smi not found. Please install NVIDIA drivers first."
+    echo "Run: sudo apt install -y nvidia-driver-525"
+    exit 1
+fi
+
+nvidia-smi
+echo "NVIDIA drivers verified successfully."
+
 # Download Telegraf
 echo "Downloading Telegraf..."
 wget https://dl.influxdata.com/telegraf/releases/telegraf_1.27.1-1_amd64.deb
@@ -25,6 +36,17 @@ cd /etc/telegraf
 # Remove default configuration
 echo "Removing default config..."
 sudo rm -f telegraf.conf
+
+# Load environment variables
+echo "Loading environment variables..."
+set -a
+source <(sudo cat /root/.env)
+set +a
+
+# Detect nvidia-smi path
+echo "Detecting nvidia-smi path..."
+NVIDIA_SMI_PATH=$(which nvidia-smi)
+echo "Found nvidia-smi at: $NVIDIA_SMI_PATH"
 
 # Create custom telegraf.conf
 echo "Creating custom telegraf.conf..."
@@ -59,6 +81,11 @@ sudo tee telegraf.conf > /dev/null <<EOF
 [[inputs.processes]]
 
 [[inputs.system]]
+
+# Read NVIDIA GPU metrics
+[[inputs.nvidia_smi]]
+  bin_path = "$NVIDIA_SMI_PATH"
+  timeout = "5s"
 EOF
 
 # Configure telegraf service
@@ -69,9 +96,15 @@ EnvironmentFile=/root/.env
 ExecStart=/usr/bin/telegraf --config /etc/telegraf/telegraf.conf
 EOF
 
+# Add permission for Telegraf to reach NVIDIA SMI
+sudo usermod -aG video telegraf
+
 # Restart Telegraf service
 echo "Restarting Telegraf service..."
 sudo systemctl daemon-reload
-sudo service telegraf restart
-
+sudo systemctl restart telegraf
+sudo systemctl status telegraf --no-pager -l
 echo "Telegraf installation and configuration complete!"
+
+echo "Checking NVIDIA SMI plugin..."
+sudo telegraf --config /etc/telegraf/telegraf.conf --input-filter nvidia_smi --test
