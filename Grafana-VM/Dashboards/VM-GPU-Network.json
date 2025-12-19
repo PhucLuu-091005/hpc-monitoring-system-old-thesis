@@ -1422,7 +1422,7 @@
             "mean"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "showUnfilled": true,
         "text": {},
@@ -1482,7 +1482,7 @@
             "mean"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "showUnfilled": true,
         "text": {},
@@ -1542,7 +1542,7 @@
             "mean"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "showUnfilled": true,
         "text": {},
@@ -1603,7 +1603,7 @@
               },
               {
                 "id": "displayName",
-                "value": "Recv (KB)"
+                "value": "Download"
               }
             ]
           },
@@ -1619,7 +1619,7 @@
               },
               {
                 "id": "displayName",
-                "value": "Sent (KB)"
+                "value": "Upload"
               }
             ]
           },
@@ -1638,24 +1638,12 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "pid"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "PID"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "raddr"
             },
             "properties": [
               {
                 "id": "displayName",
-                "value": "Dest Address"
+                "value": "Remote IP"
               }
             ]
           },
@@ -1667,7 +1655,7 @@
             "properties": [
               {
                 "id": "displayName",
-                "value": "Dest Port"
+                "value": "Remote Port"
               }
             ]
           }
@@ -1694,7 +1682,7 @@
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Sent (KB)"
+            "displayName": "Upload"
           }
         ]
       },
@@ -1705,7 +1693,7 @@
             "type": "influxdb",
             "uid": "${DS_VM-GPU}"
           },
-          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"tcp_top\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"tx_kb\" or r[\"_field\"] == \"rx_kb\")\r\n  |> group(columns: [\"pid\", \"comm\", \"raddr\", \"dport\"])\r\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\r\n  |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"host\", \"laddr\", \"lport\"])\r\n  |> sort(columns: [\"_time\"], desc: true)\r\n  |> limit(n: 50)",
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"tcp_top\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"tx_kb\" or r[\"_field\"] == \"rx_kb\")\r\n  // Dòng quan trọng: Pivot để xoay dữ liệu, đưa Tag và Field lên cùng 1 hàng\r\n  |> pivot(rowKey:[\"_time\", \"pid\", \"comm\", \"raddr\", \"dport\"], columnKey: [\"_field\"], valueColumn: \"_value\")\r\n  // Bỏ group để hiện toàn bộ danh sách phẳng\r\n  |> group()\r\n  // Xóa các cột rác không cần thiết\r\n  |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"host\", \"laddr\", \"lport\"])\r\n  // Sắp xếp theo thời gian mới nhất\r\n  |> sort(columns: [\"_time\"], desc: true)\r\n  // Lấy 50 dòng đầu tiên\r\n  |> limit(n: 50)",
           "refId": "A"
         }
       ],
