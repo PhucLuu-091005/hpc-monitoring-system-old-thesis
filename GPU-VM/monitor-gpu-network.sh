@@ -28,11 +28,15 @@ if ! command -v nvidia-smi &> /dev/null; then
 fi
 
 # INSTALL TELEGRAF
-echo "Downloading Telegraf..."
-wget -q https://dl.influxdata.com/telegraf/releases/telegraf_1.27.1-1_amd64.deb -O telegraf.deb
-echo "Installing Telegraf..."
-sudo dpkg -i telegraf.deb
-rm telegraf.deb
+if ! command -v telegraf &> /dev/null; then
+  echo "Telegraf not found. Downloading Telegraf..."
+  wget -q https://dl.influxdata.com/telegraf/releases/telegraf_1.27.1-1_amd64.deb -O telegraf.deb
+  echo "Installing Telegraf..."
+  sudo dpkg -i telegraf.deb
+  rm telegraf.deb
+else
+  echo "Telegraf is already installed. Skipping download and install."
+fi
 
 # SETUP SCRIPTS DIRECTORY
 echo "Setting up scripts directory at $INSTALL_DIR..."
