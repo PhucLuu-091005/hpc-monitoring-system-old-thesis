@@ -111,6 +111,7 @@ sudo tee telegraf.conf > /dev/null <<EOF
   token = "$INFLUX_TOKEN"
   organization = "$INFLUX_ORG"
   bucket = "$INFLUX_BUCKET_VM"
+  timeout = "20s"
 
 # Read metrics about cpu usage
 [[inputs.cpu]]
